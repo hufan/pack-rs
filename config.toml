@@ -1,0 +1,53 @@
+# 打包配置文件
+
+# 输出目录
+output_dir = "./output"
+
+#uboot
+#linux
+#tfa 
+#yocto
+#mxapp2
+
+#[[repositories]]
+#name = "myir-ti-uboot"
+#url = "https://github.com/MYIR-TI/myir-ti-uboot.git"
+#branch = "develop-ti-u-boot-2025.01-V11.00.15.02"
+## 可选：指定下载目录，如果不指定则自动从 URL 提取仓库名（默认为 repos/myir-ti-uboot）
+## target_dir = "repos/myir-ti-uboot-custom"
+## 可选：是否在打包前清理目录
+#clean_before_pull = true
+#include_git = true
+#
+#[[repositories]]
+#name = "myir-ti-linux"
+#url = "https://github.com/MYIR-TI/myir-ti-linux.git"
+#branch = "develop-ti-linux-6.12.y-V11.00.15.05"
+#clean_before_pull = true
+#include_git = true
+#
+#[[repositories]]
+#name = "atf"
+#url = "https://github.com/MYIR-TI/myir-ti-atf.git"
+#branch = "develop-ti-master-V11.00.15.02"
+#clean_before_pull = true
+## 可选：Git clone 深度，如果不指定则完整克隆
+#depth = 1
+## 可选：是否在打包时包含 .git 目录，默认 false（不包含）
+#include_git = true
+#
+#[[repositories]]
+#name = "oe-layersetup"
+#url = "https://github.com/MYIR-TI/oe-layersetup.git"
+#branch = "develop-ym62lx-V11.00.15.05"
+## target_dir = "repos/another-repo"
+#clean_before_pull = true
+#include_git = true
+
+[[repositories]]
+name = "MXAPP2"
+url = "https://github.com/MYiR-Dev/mxapp.git"
+branch = "MXAPP-QT6"
+target_dir = "repos/mxapp2"
+clean_before_pull = true
+include_git = true
