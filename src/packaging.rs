@@ -1,7 +1,9 @@
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use std::path::Path;
+use std::time::Duration;
 use tokio::process::Command;
+use tokio::time::timeout;
 
 #[async_trait]
 pub trait Packager: Send + Sync {
@@ -11,6 +13,7 @@ pub trait Packager: Send + Sync {
         output_path: &Path,
         top_level_dir: &str,
         include_git: bool,
+        timeout_secs: u64,
     ) -> Result<()>;
 }
 
@@ -19,6 +22,30 @@ pub struct TarPackager;
 #[async_trait]
 impl Packager for TarPackager {
     async fn package(
+        &self,
+        source_dir: &Path,
+        output_path: &Path,
+        top_level_dir: &str,
+        include_git: bool,
+        timeout_secs: u64,
+    ) -> Result<()> {
+        let package_result = timeout(
+            Duration::from_secs(timeout_secs),
+            self.package_internal(source_dir, output_path, top_level_dir, include_git)
+        ).await;
+
+        match package_result {
+            Ok(Ok(_)) => Ok(()),
+            Ok(Err(e)) => Err(e),
+            Err(_) => {
+                anyhow::bail!("Packaging timed out after {} seconds", timeout_secs)
+            }
+        }
+    }
+}
+
+impl TarPackager {
+    async fn package_internal(
         &self,
         source_dir: &Path,
         output_path: &Path,

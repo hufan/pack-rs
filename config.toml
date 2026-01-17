@@ -3,13 +3,21 @@
 # 输出目录
 output_dir = "./output"
 
+# 并发控制
+max_concurrent = 4
+
+# 全局配置
+max_retries = 3
+fetch_timeout = 1800
+package_timeout = 600
+
 #uboot
 #linux
 #tfa
 #yocto
 #mxapp2
 
-[[repositories]]
+ [[repositories]]
 name = "myir-ti-uboot"
 url = "https://github.com/MYIR-TI/myir-ti-uboot.git"
 branch = "develop-ti-u-boot-2025.01-V11.00.15.02"
@@ -20,6 +28,12 @@ clean_before_pull = true
 depth = 1
 # 可选：是否在打包时包含 .git 目录，默认 false（不包含）
 include_git = true
+# 可选：重试次数（默认 3）
+max_retries = 3
+# 可选：拉取超时时间，单位秒（默认 1800）
+fetch_timeout = 1800
+# 可选：打包超时时间，单位秒（默认 600）
+package_timeout = 600
 
 [[repositories]]
 name = "myir-ti-linux"

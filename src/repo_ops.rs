@@ -2,19 +2,64 @@ use crate::model::Repository;
 use anyhow::{anyhow, Context, Result};
 use async_trait::async_trait;
 use std::path::PathBuf;
+use std::time::Duration;
 use tokio::fs;
 use tokio::process::Command;
+use tokio::time::{sleep, timeout};
 
 #[async_trait]
 pub trait RepositoryFetcher: Send + Sync {
-    async fn fetch(&self, repo: &Repository) -> Result<PathBuf>;
+    async fn fetch(&self, repo: &Repository, max_retries: u32, timeout_secs: u64) -> Result<PathBuf>;
 }
 
 pub struct GitFetcher;
 
 #[async_trait]
 impl RepositoryFetcher for GitFetcher {
-    async fn fetch(&self, repo: &Repository) -> Result<PathBuf> {
+    async fn fetch(&self, repo: &Repository, max_retries: u32, timeout_secs: u64) -> Result<PathBuf> {
+        let mut last_error = None;
+        let repo_name = extract_repo_name(&repo.url)?;
+
+        for attempt in 1..=max_retries {
+            println!("[{}] Attempt {}/{}", repo_name, attempt, max_retries);
+
+            let result = timeout(
+                Duration::from_secs(timeout_secs),
+                self.fetch_with_retry(repo)
+            ).await;
+
+            match result {
+                Ok(Ok(path)) => {
+                    if attempt > 1 {
+                        println!("[{}] Successfully fetched on attempt {}", repo_name, attempt);
+                    }
+                    return Ok(path);
+                }
+                Ok(Err(e)) => {
+                    let error = anyhow::anyhow!("Fetch failed: {}", e);
+                    eprintln!("[{}] Attempt {}/{} failed: {}", repo_name, attempt, max_retries, error);
+                    last_error = Some(error);
+                }
+                Err(_) => {
+                    let error = anyhow::anyhow!("Fetch timeout after {} seconds", timeout_secs);
+                    eprintln!("[{}] Attempt {}/{} timed out", repo_name, attempt, max_retries);
+                    last_error = Some(error);
+                }
+            }
+
+            if attempt < max_retries {
+                let delay = Duration::from_secs(5 * attempt as u64);
+                println!("[{}] Waiting {:?} before retry...", repo_name, delay);
+                sleep(delay).await;
+            }
+        }
+
+        Err(last_error.unwrap_or_else(|| anyhow::anyhow!("Fetch failed after {} attempts", max_retries)))
+    }
+}
+
+impl GitFetcher {
+    async fn fetch_with_retry(&self, repo: &Repository) -> Result<PathBuf> {
         let target_dir = get_repo_dir(repo)?;
         let target_path = target_dir.as_path();
         let target_path_str = target_path.to_str().ok_or_else(|| {

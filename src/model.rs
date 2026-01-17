@@ -6,6 +6,14 @@ pub struct Config {
     #[allow(dead_code)]
     // package_prefix: String,
     pub repositories: Vec<Repository>,
+    #[serde(default = "default_max_concurrent")]
+    pub max_concurrent: usize,
+    #[serde(default = "default_max_retries")]
+    pub max_retries: u32,
+    #[serde(default = "default_fetch_timeout")]
+    pub fetch_timeout: u64,
+    #[serde(default = "default_package_timeout")]
+    pub package_timeout: u64,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -21,4 +29,26 @@ pub struct Repository {
     pub depth: Option<u32>,
     #[serde(default)]
     pub include_git: bool,
+    #[serde(default = "default_max_retries")]
+    pub max_retries: u32,
+    #[serde(default = "default_fetch_timeout")]
+    pub fetch_timeout: u64,
+    #[serde(default = "default_package_timeout")]
+    pub package_timeout: u64,
+}
+
+fn default_max_concurrent() -> usize {
+    4
+}
+
+fn default_max_retries() -> u32 {
+    3
+}
+
+fn default_fetch_timeout() -> u64 {
+    1800
+}
+
+fn default_package_timeout() -> u64 {
+    600
 }
