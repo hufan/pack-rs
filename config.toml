@@ -11,23 +11,57 @@ max_retries = 3
 fetch_timeout = 1800
 package_timeout = 600
 
-#uboot
-#linux
-#tfa
-#yocto
-#mxapp2
-
- [[repositories]]
+# 场景 1：只下载，不打包
+[[repositories]]
 name = "myir-ti-uboot"
 url = "https://github.com/MYIR-TI/myir-ti-uboot.git"
 branch = "develop-ti-u-boot-2025.01-V11.00.15.02"
-# 可选：指定下载目录，如果不指定则自动从 URL 提取仓库名（默认为 repos/myir-ti-uboot）
-target_dir = "repos/myir-ti-uboot-custom"
-# 可选：是否在打包前清理目录
+target_dir = "repos/myir-ti-uboot"
 clean_before_pull = true
 depth = 1
-# 可选：是否在打包时包含 .git 目录，默认 false（不包含）
 include_git = true
+enable_fetch = true
+enable_package = false
+
+# 场景 2：只打包，不下载（本地已有）
+[[repositories]]
+name = "myir-ti-linux"
+url = "https://github.com/MYIR-TI/myir-ti-linux.git"
+branch = "develop-ti-linux-6.12.y-V11.00.15.05"
+target_dir = "repos/myir-ti-linux-existing"
+enable_fetch = false
+enable_package = true
+include_git = true
+
+# 场景 3：下载 + 打包（默认行为）
+[[repositories]]
+name = "atf"
+url = "https://github.com/MYIR-TI/myir-ti-atf.git"
+branch = "develop-ti-master-V11.00.15.02"
+clean_before_pull = true
+depth = 1
+include_git = true
+
+# 场景 4：下载 + 打包
+[[repositories]]
+name = "oe-layersetup"
+url = "https://github.com/MYIR-TI/oe-layersetup.git"
+branch = "develop-ym62lx-V11.00.15.05"
+clean_before_pull = true
+depth = 1
+include_git = true
+
+# 场景 5：只下载，稍后手动打包
+[[repositories]]
+name = "MXAPP2"
+url = "https://github.com/MYiR-Dev/mxapp.git"
+branch = "MXAPP-QT6"
+target_dir = "repos/mxapp2"
+clean_before_pull = true
+depth = 1
+include_git = true
+enable_fetch = true
+enable_package = false
 # 可选：重试次数（默认 3）
 max_retries = 3
 # 可选：拉取超时时间，单位秒（默认 1800）

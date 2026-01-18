@@ -29,12 +29,24 @@ pub struct Repository {
     pub depth: Option<u32>,
     #[serde(default)]
     pub include_git: bool,
+    #[serde(default = "default_enable_fetch")]
+    pub enable_fetch: bool,
+    #[serde(default = "default_enable_package")]
+    pub enable_package: bool,
     #[serde(default = "default_max_retries")]
     pub max_retries: u32,
     #[serde(default = "default_fetch_timeout")]
     pub fetch_timeout: u64,
     #[serde(default = "default_package_timeout")]
     pub package_timeout: u64,
+}
+
+fn default_enable_fetch() -> bool {
+    true
+}
+
+fn default_enable_package() -> bool {
+    true
 }
 
 fn default_max_concurrent() -> usize {

@@ -1,6 +1,6 @@
 use crate::model::Repository;
 use crate::packaging::Packager;
-use crate::repo_ops::{extract_repo_name, get_package_name, RepositoryFetcher};
+use crate::repo_ops::{extract_repo_name, get_package_name, get_repo_dir, RepositoryFetcher};
 use anyhow::{bail, Result};
 use futures::future;
 use std::path::{Path, PathBuf};
@@ -54,24 +54,49 @@ where
                     let package_base_name = get_package_name(&repo)?;
 
                     println!("\n[{}] Processing repository: {}", repo_name, repo.name);
+                    println!("[{}] Stages: fetch={}, package={}", 
+                             repo_name, repo.enable_fetch, repo.enable_package);
 
                     let max_retries = repo.max_retries;
                     let fetch_timeout = repo.fetch_timeout;
                     let package_timeout = repo.package_timeout;
 
-                    let repo_dir = fetcher.fetch(&repo, max_retries, fetch_timeout).await?;
+                    let repo_dir = if repo.enable_fetch {
+                        println!("[{}] Fetching...", repo_name);
+                        Some(fetcher.fetch(&repo, max_retries, fetch_timeout).await?)
+                    } else {
+                        println!("[{}] Using existing directory", repo_name);
+                        Some(get_repo_dir(&repo)?)
+                    };
+
+                    let repo_dir = match repo_dir {
+                        Some(dir) => dir,
+                        None => {
+                            eprintln!("[{}] Warning: No repository directory, skipping", repo_name);
+                            return Ok(());
+                        }
+                    };
 
                     if !repo_dir.exists() {
                         eprintln!("[{}] Warning: repo directory missing, skipping", repo_name);
                         return Ok(());
                     }
 
-                    let package_name = format!("{}.tar.gz", package_base_name);
-                    let package_path = Path::new(&output_dir).join(&package_name);
+                    if repo.enable_package {
+                        println!("[{}] Packaging...", repo_name);
+                        let package_name = format!("{}.tar.gz", package_base_name);
+                        let package_path = Path::new(&output_dir).join(&package_name);
 
-                    packager
-                        .package(&repo_dir, &package_path, &package_base_name, repo.include_git, package_timeout)
-                        .await
+                        packager
+                            .package(&repo_dir, &package_path, &package_base_name, repo.include_git, package_timeout)
+                            .await?;
+                    } else {
+                        println!("[{}] Package skipped", repo_name);
+                    }
+
+                    println!("[{}] Completed", repo_name);
+
+                    Ok(())
                 })
             })
             .collect();

@@ -161,7 +161,8 @@ pub fn extract_repo_name(url: &str) -> Result<String> {
     anyhow::bail!("Failed to extract repository name from URL: {}", url)
 }
 
-fn get_repo_dir(repo: &Repository) -> Result<PathBuf> {
+/// 获取仓库的本地目录路径
+pub fn get_repo_dir(repo: &Repository) -> Result<PathBuf> {
     if let Some(ref target_dir) = repo.target_dir {
         Ok(PathBuf::from(target_dir))
     } else {
@@ -181,7 +182,6 @@ pub fn get_package_name(repo: &Repository) -> Result<String> {
                 return Ok(name_str.to_string());
             }
         }
-        // 如果无法从路径提取文件名，fallback 到 URL 提取
         extract_repo_name(&repo.url)
     } else {
         extract_repo_name(&repo.url)
